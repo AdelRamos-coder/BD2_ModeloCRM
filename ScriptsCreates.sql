@@ -2,6 +2,10 @@
    CRM ODERLOGICA
    CREATE TABLE - 12 tablas
    Motor: SQL Server
+
+   Nomenclatura:
+     PROSPECTO = la persona (cliente potencial)
+     NEGOCIO   = la negociacion de esa persona por un producto
    ============================================================ */
 
 IF DB_ID('CRM_Oderlogica') IS NOT NULL
@@ -92,7 +96,7 @@ GO
 
 /* clave_hash : salida de HASHBYTES('SHA2_256'). Nunca texto plano.
    activo     : un trabajador no se borra, se desactiva: miles de
-                prospectos lo referencian.                       */
+                negocios lo referencian.                         */
 CREATE TABLE TRABAJADOR (
     id_trabajador       INT IDENTITY(1,1),
     nombre_trabajador   VARCHAR(100)    NOT NULL,
@@ -113,23 +117,23 @@ GO
 
 
 /* La PERSONA. Existe una sola vez aunque negocie varias veces.
-   Separarla de PROSPECTO elimina la dependencia transitiva
-   id_prospecto -> celular -> nombre del modelo original.        */
+   Separarla de NEGOCIO elimina la dependencia transitiva
+   id_negocio -> celular -> nombre del modelo original.          */
 CREATE TABLE PROSPECTO (
-    id_prospecto     INT IDENTITY(1,1),
-    nombre_contacto VARCHAR(150)    NOT NULL,
-    celular         VARCHAR(20)     NOT NULL,
-    correo          VARCHAR(150)    NULL,
-    fecha_registro  DATETIME2(0)    NOT NULL CONSTRAINT DF_CONTACTO_fecha  DEFAULT SYSDATETIME(),
-    activo          BIT             NOT NULL CONSTRAINT DF_CONTACTO_activo DEFAULT 1,
+    id_prospecto        INT IDENTITY(1,1),
+    nombre_prospecto    VARCHAR(150)    NOT NULL,
+    celular             VARCHAR(20)     NOT NULL,
+    correo              VARCHAR(150)    NULL,
+    fecha_registro      DATETIME2(0)    NOT NULL CONSTRAINT DF_PROSPECTO_fecha  DEFAULT SYSDATETIME(),
+    activo              BIT             NOT NULL CONSTRAINT DF_PROSPECTO_activo DEFAULT 1,
 
-    CONSTRAINT PK_PROSPECTO          PRIMARY KEY (id_prospecto),
-    CONSTRAINT UQ_PROSPECTO_celular  UNIQUE (celular)
+    CONSTRAINT PK_PROSPECTO         PRIMARY KEY (id_prospecto),
+    CONSTRAINT UQ_PROSPECTO_celular UNIQUE (celular)
 );
 GO
 
 
-/* La NEGOCIACION. Un contacto puede tener varias, con distinto
+/* La NEGOCIACION. Un prospecto puede tener varias, con distinto
    producto, asesor y fase.
 
    nivel_interes      : las 5 estrellas. Escala ordinal que se
@@ -140,8 +144,8 @@ GO
    activo /
    fecha_inactivacion : borrado logico.                          */
 CREATE TABLE NEGOCIO (
-    id_negocio        INT IDENTITY(1,1),
-    id_prospecto         INT             NOT NULL,
+    id_negocio          INT IDENTITY(1,1),
+    id_prospecto        INT             NOT NULL,
     id_trabajador       INT             NOT NULL,
     id_fase             INT             NOT NULL,
     id_medio            INT             NOT NULL,
@@ -152,22 +156,22 @@ CREATE TABLE NEGOCIO (
     activo              BIT             NOT NULL CONSTRAINT DF_NEGOCIO_activo DEFAULT 1,
     fecha_inactivacion  DATETIME2(0)    NULL,
 
-    CONSTRAINT PK_NEGOCIO             PRIMARY KEY (id_negocio),
+    CONSTRAINT PK_NEGOCIO               PRIMARY KEY (id_negocio),
 
-    CONSTRAINT FK_NEGOCIO_prospecto    FOREIGN KEY (id_prospecto)
-        REFERENCES CONTACTO (id_contacto),
-    CONSTRAINT FK_NEGOCIO_trabajador  FOREIGN KEY (id_trabajador)
+    CONSTRAINT FK_NEGOCIO_prospecto     FOREIGN KEY (id_prospecto)
+        REFERENCES PROSPECTO (id_prospecto),
+    CONSTRAINT FK_NEGOCIO_trabajador    FOREIGN KEY (id_trabajador)
         REFERENCES TRABAJADOR (id_trabajador),
-    CONSTRAINT FK_NEGOCIO_fase        FOREIGN KEY (id_fase)
+    CONSTRAINT FK_NEGOCIO_fase          FOREIGN KEY (id_fase)
         REFERENCES FASE (id_fase),
-    CONSTRAINT FK_NEGOCIO_medio       FOREIGN KEY (id_medio)
+    CONSTRAINT FK_NEGOCIO_medio         FOREIGN KEY (id_medio)
         REFERENCES MEDIO_CONTACTO (id_medio),
-    CONSTRAINT FK_NEGOCIO_producto    FOREIGN KEY (id_producto)
+    CONSTRAINT FK_NEGOCIO_producto      FOREIGN KEY (id_producto)
         REFERENCES PRODUCTO_SERVICIO (id_producto),
 
-    CONSTRAINT CK_NEGOCIO_nivel       CHECK (nivel_interes BETWEEN 1 AND 5),
+    CONSTRAINT CK_NEGOCIO_nivel         CHECK (nivel_interes BETWEEN 1 AND 5),
 
-    CONSTRAINT CK_NEGOCIO_inactivo    CHECK (
+    CONSTRAINT CK_NEGOCIO_inactivo      CHECK (
         (activo = 1 AND fecha_inactivacion IS NULL) OR
         (activo = 0 AND fecha_inactivacion IS NOT NULL)
     )
@@ -181,7 +185,7 @@ GO
    fecha_registro   : cuando se escribio      (pasado)
    fecha_programada : cuando ocurre la cita   (futuro)
    id_trabajador    : quien REGISTRO la actividad, que puede no
-                      ser el dueno del prospecto.                */
+                      ser el dueno del negocio.                  */
 CREATE TABLE ACTIVIDAD (
     id_actividad        INT IDENTITY(1,1),
     id_negocio          INT             NOT NULL,
@@ -197,7 +201,7 @@ CREATE TABLE ACTIVIDAD (
 
     CONSTRAINT PK_ACTIVIDAD             PRIMARY KEY (id_actividad),
 
-    CONSTRAINT FK_ACTIVIDAD_negocio   FOREIGN KEY (id_negocio)
+    CONSTRAINT FK_ACTIVIDAD_negocio     FOREIGN KEY (id_negocio)
         REFERENCES NEGOCIO (id_negocio),
     CONSTRAINT FK_ACTIVIDAD_tipo        FOREIGN KEY (id_tipo)
         REFERENCES TIPO_ACTIVIDAD (id_tipo),
@@ -212,8 +216,8 @@ CREATE TABLE ACTIVIDAD (
 GO
 
 
-/* Cotizacion formal. Un prospecto puede tener varias (inicial,
-   mejorada, final), por eso 1:N y no una columna en PROSPECTO.
+/* Cotizacion formal. Un negocio puede tener varias (inicial,
+   mejorada, final), por eso 1:N y no una columna en NEGOCIO.
 
    monto  : DECIMAL, nunca FLOAT. FLOAT es aproximado y con dinero
             produce valores como 179999999.9999998.
@@ -231,7 +235,7 @@ CREATE TABLE PROPUESTA (
 
     CONSTRAINT PK_PROPUESTA             PRIMARY KEY (id_propuesta),
 
-    CONSTRAINT FK_PROPUESTA_negocio   FOREIGN KEY (id_negocio)
+    CONSTRAINT FK_PROPUESTA_negocio     FOREIGN KEY (id_negocio)
         REFERENCES NEGOCIO (id_negocio),
     CONSTRAINT FK_PROPUESTA_trabajador  FOREIGN KEY (id_trabajador)
         REFERENCES TRABAJADOR (id_trabajador),
@@ -249,7 +253,7 @@ GO
    TABLAS TECNICAS
 
    Sin claves foraneas, a proposito. Si AUDITORIA tuviera FK
-   hacia PROSPECTO, al borrar el prospecto 88 el motor exigiria
+   hacia NEGOCIO, al borrar el negocio 88 el motor exigiria
    borrar tambien su rastro, que es justo lo que la auditoria
    existe para impedir. Guardan el identificador suelto.
    ------------------------------------------------------------ */
@@ -280,4 +284,19 @@ CREATE TABLE LOG_ACTIVIDAD (
 
     CONSTRAINT PK_LOG_ACTIVIDAD PRIMARY KEY (id_log)
 );
+GO
+
+
+/* ------------------------------------------------------------
+   VERIFICACION
+   ------------------------------------------------------------ */
+
+SELECT
+    t.name AS tabla,
+    (SELECT COUNT(*) FROM sys.columns c
+      WHERE c.object_id = t.object_id) AS columnas,
+    (SELECT COUNT(*) FROM sys.foreign_keys f
+      WHERE f.parent_object_id = t.object_id) AS fks
+FROM sys.tables t
+ORDER BY t.name;
 GO
