@@ -116,15 +116,15 @@ GO
    Separarla de PROSPECTO elimina la dependencia transitiva
    id_prospecto -> celular -> nombre del modelo original.        */
 CREATE TABLE PROSPECTO (
-    id_contacto     INT IDENTITY(1,1),
+    id_prospecto     INT IDENTITY(1,1),
     nombre_contacto VARCHAR(150)    NOT NULL,
     celular         VARCHAR(20)     NOT NULL,
     correo          VARCHAR(150)    NULL,
     fecha_registro  DATETIME2(0)    NOT NULL CONSTRAINT DF_CONTACTO_fecha  DEFAULT SYSDATETIME(),
     activo          BIT             NOT NULL CONSTRAINT DF_CONTACTO_activo DEFAULT 1,
 
-    CONSTRAINT PK_CONTACTO          PRIMARY KEY (id_contacto),
-    CONSTRAINT UQ_CONTACTO_celular  UNIQUE (celular)
+    CONSTRAINT PK_PROSPECTO          PRIMARY KEY (id_prospecto),
+    CONSTRAINT UQ_PROSPECTO_celular  UNIQUE (celular)
 );
 GO
 
@@ -140,34 +140,34 @@ GO
    activo /
    fecha_inactivacion : borrado logico.                          */
 CREATE TABLE NEGOCIO (
-    id_prospecto        INT IDENTITY(1,1),
-    id_contacto         INT             NOT NULL,
+    id_negocio        INT IDENTITY(1,1),
+    id_prospecto         INT             NOT NULL,
     id_trabajador       INT             NOT NULL,
     id_fase             INT             NOT NULL,
     id_medio            INT             NOT NULL,
     id_producto         INT             NOT NULL,
-    nivel_interes       TINYINT         NOT NULL CONSTRAINT DF_PROSPECTO_nivel  DEFAULT 1,
-    fecha_registro      DATETIME2(0)    NOT NULL CONSTRAINT DF_PROSPECTO_fecha  DEFAULT SYSDATETIME(),
+    nivel_interes       TINYINT         NOT NULL CONSTRAINT DF_NEGOCIO_nivel  DEFAULT 1,
+    fecha_registro      DATETIME2(0)    NOT NULL CONSTRAINT DF_NEGOCIO_fecha  DEFAULT SYSDATETIME(),
     ultima_actividad    DATETIME2(0)    NULL,
-    activo              BIT             NOT NULL CONSTRAINT DF_PROSPECTO_activo DEFAULT 1,
+    activo              BIT             NOT NULL CONSTRAINT DF_NEGOCIO_activo DEFAULT 1,
     fecha_inactivacion  DATETIME2(0)    NULL,
 
-    CONSTRAINT PK_PROSPECTO             PRIMARY KEY (id_prospecto),
+    CONSTRAINT PK_NEGOCIO             PRIMARY KEY (id_negocio),
 
-    CONSTRAINT FK_PROSPECTO_contacto    FOREIGN KEY (id_contacto)
+    CONSTRAINT FK_NEGOCIO_prospecto    FOREIGN KEY (id_prospecto)
         REFERENCES CONTACTO (id_contacto),
-    CONSTRAINT FK_PROSPECTO_trabajador  FOREIGN KEY (id_trabajador)
+    CONSTRAINT FK_NEGOCIO_trabajador  FOREIGN KEY (id_trabajador)
         REFERENCES TRABAJADOR (id_trabajador),
-    CONSTRAINT FK_PROSPECTO_fase        FOREIGN KEY (id_fase)
+    CONSTRAINT FK_NEGOCIO_fase        FOREIGN KEY (id_fase)
         REFERENCES FASE (id_fase),
-    CONSTRAINT FK_PROSPECTO_medio       FOREIGN KEY (id_medio)
+    CONSTRAINT FK_NEGOCIO_medio       FOREIGN KEY (id_medio)
         REFERENCES MEDIO_CONTACTO (id_medio),
-    CONSTRAINT FK_PROSPECTO_producto    FOREIGN KEY (id_producto)
+    CONSTRAINT FK_NEGOCIO_producto    FOREIGN KEY (id_producto)
         REFERENCES PRODUCTO_SERVICIO (id_producto),
 
-    CONSTRAINT CK_PROSPECTO_nivel       CHECK (nivel_interes BETWEEN 1 AND 5),
+    CONSTRAINT CK_NEGOCIO_nivel       CHECK (nivel_interes BETWEEN 1 AND 5),
 
-    CONSTRAINT CK_PROSPECTO_inactivo    CHECK (
+    CONSTRAINT CK_NEGOCIO_inactivo    CHECK (
         (activo = 1 AND fecha_inactivacion IS NULL) OR
         (activo = 0 AND fecha_inactivacion IS NOT NULL)
     )
@@ -184,7 +184,7 @@ GO
                       ser el dueno del prospecto.                */
 CREATE TABLE ACTIVIDAD (
     id_actividad        INT IDENTITY(1,1),
-    id_prospecto        INT             NOT NULL,
+    id_negocio          INT             NOT NULL,
     id_tipo             INT             NOT NULL,
     id_trabajador       INT             NOT NULL,
     descripcion         NVARCHAR(MAX)   NOT NULL,
@@ -197,8 +197,8 @@ CREATE TABLE ACTIVIDAD (
 
     CONSTRAINT PK_ACTIVIDAD             PRIMARY KEY (id_actividad),
 
-    CONSTRAINT FK_ACTIVIDAD_prospecto   FOREIGN KEY (id_prospecto)
-        REFERENCES PROSPECTO (id_prospecto),
+    CONSTRAINT FK_ACTIVIDAD_negocio   FOREIGN KEY (id_negocio)
+        REFERENCES NEGOCIO (id_negocio),
     CONSTRAINT FK_ACTIVIDAD_tipo        FOREIGN KEY (id_tipo)
         REFERENCES TIPO_ACTIVIDAD (id_tipo),
     CONSTRAINT FK_ACTIVIDAD_trabajador  FOREIGN KEY (id_trabajador)
@@ -221,7 +221,7 @@ GO
             porque no es una lista que el administrador edite.    */
 CREATE TABLE PROPUESTA (
     id_propuesta        INT IDENTITY(1,1),
-    id_prospecto        INT             NOT NULL,
+    id_negocio          INT             NOT NULL,
     id_trabajador       INT             NOT NULL,
     monto               DECIMAL(15,2)   NOT NULL,
     fecha_propuesta     DATE            NOT NULL CONSTRAINT DF_PROPUESTA_fecha  DEFAULT CAST(SYSDATETIME() AS DATE),
@@ -231,8 +231,8 @@ CREATE TABLE PROPUESTA (
 
     CONSTRAINT PK_PROPUESTA             PRIMARY KEY (id_propuesta),
 
-    CONSTRAINT FK_PROPUESTA_prospecto   FOREIGN KEY (id_prospecto)
-        REFERENCES PROSPECTO (id_prospecto),
+    CONSTRAINT FK_PROPUESTA_negocio   FOREIGN KEY (id_negocio)
+        REFERENCES NEGOCIO (id_negocio),
     CONSTRAINT FK_PROPUESTA_trabajador  FOREIGN KEY (id_trabajador)
         REFERENCES TRABAJADOR (id_trabajador),
 
@@ -273,7 +273,7 @@ GO
 CREATE TABLE LOG_ACTIVIDAD (
     id_log              BIGINT IDENTITY(1,1),
     id_actividad        INT             NOT NULL,
-    id_prospecto        INT             NOT NULL,
+    id_negocio          INT             NOT NULL,
     id_trabajador       INT             NULL,
     fecha_completada    DATETIME2(0)    NOT NULL CONSTRAINT DF_LOG_fecha DEFAULT SYSDATETIME(),
     mensaje             NVARCHAR(500)   NULL,
