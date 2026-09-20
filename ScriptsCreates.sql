@@ -287,15 +287,7 @@ CREATE TABLE LOG_ACTIVIDAD (
 GO
 
 
-/* ------------------------------------------------------------
-   VERIFICACION
-   ------------------------------------------------------------ */
 
-SELECT
-    t.name AS tabla,
-    (SELECT COUNT(*) FROM sys.columns c
-      WHERE c.object_id = t.object_id) AS columnas,
-    (SELECT COUNT(*) FROM sys.foreign_keys f
       WHERE f.parent_object_id = t.object_id) AS fks
 FROM sys.tables t
 ORDER BY t.name;
