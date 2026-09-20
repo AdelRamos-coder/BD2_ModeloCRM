@@ -115,7 +115,7 @@ GO
 /* La PERSONA. Existe una sola vez aunque negocie varias veces.
    Separarla de PROSPECTO elimina la dependencia transitiva
    id_prospecto -> celular -> nombre del modelo original.        */
-CREATE TABLE CONTACTO (
+CREATE TABLE PROSPECTO (
     id_contacto     INT IDENTITY(1,1),
     nombre_contacto VARCHAR(150)    NOT NULL,
     celular         VARCHAR(20)     NOT NULL,
@@ -139,7 +139,7 @@ GO
                         Kanban. Lo mantiene un trigger.
    activo /
    fecha_inactivacion : borrado logico.                          */
-CREATE TABLE PROSPECTO (
+CREATE TABLE NEGOCIO (
     id_prospecto        INT IDENTITY(1,1),
     id_contacto         INT             NOT NULL,
     id_trabajador       INT             NOT NULL,
