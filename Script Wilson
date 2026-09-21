@@ -1,0 +1,121 @@
+// trigger 5
+
+CREATE TRIGGER trg_LimitarActividades
+ON ACTIVIDAD
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @negocio INT;
+    DECLARE @fecha DATE;
+    DECLARE @cantidad INT;
+
+    SELECT @negocio = id_negocio, @fecha = CAST(fecha_registro AS DATE)
+    FROM inserted;
+
+    SELECT @cantidad = COUNT(*)
+    FROM ACTIVIDAD
+    WHERE id_negocio = @negocio
+      AND CAST(fecha_registro AS DATE) = @fecha;
+
+    IF @cantidad > 5
+    BEGIN
+        ROLLBACK;
+        THROW 50001, 'No se permiten más de 5 actividades al día.', 1;
+    END
+END;
+GO
+
+// trigger 8
+
+CREATE TRIGGER trg_LogActividadCompletada
+ON ACTIVIDAD
+AFTER UPDATE
+AS
+BEGIN
+    INSERT INTO LOG_ACTIVIDAD
+    (id_actividad, id_negocio, id_trabajador, mensaje)
+    SELECT
+        i.id_actividad,
+        i.id_negocio,
+        i.id_trabajador,
+        'Actividad completada'
+    FROM inserted i
+    INNER JOIN deleted d
+        ON i.id_actividad = d.id_actividad
+    WHERE d.completada = 0
+      AND i.completada = 1;
+END;
+GO
+
+// trigger 9 
+
+CREATE TRIGGER trg_BorradoLogicoProspecto
+ON PROSPECTO
+INSTEAD OF DELETE
+AS
+BEGIN
+    UPDATE p
+    SET
+        activo = 0,
+        fecha_inactivacion = SYSDATETIME()
+    FROM PROSPECTO p
+    INNER JOIN deleted d
+        ON p.id_prospecto = d.id_prospecto;
+END;
+GO
+
+// procedimiento 3
+
+CREATE PROCEDURE sp_RegistrarActividad
+    @id_negocio INT,
+    @id_tipo INT,
+    @id_trabajador INT,
+    @descripcion NVARCHAR(MAX),
+    @fecha_programada DATE = NULL,
+    @hora_programada TIME(0) = NULL,
+    @direccion VARCHAR(200) = NULL
+AS
+BEGIN
+    INSERT INTO ACTIVIDAD
+    (
+        id_negocio,
+        id_tipo,
+        id_trabajador,
+        descripcion,
+        fecha_programada,
+        hora_programada,
+        direccion
+    )
+    VALUES
+    (
+        @id_negocio,
+        @id_tipo,
+        @id_trabajador,
+        @descripcion,
+        @fecha_programada,
+        @hora_programada,
+        @direccion
+    );
+END;
+GO
+
+// funcion 3
+
+CREATE FUNCTION fn_TotalActividadesProspecto
+(
+    @id_prospecto INT
+)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @total INT;
+
+    SELECT @total = COUNT(*)
+    FROM ACTIVIDAD a
+    INNER JOIN NEGOCIO n
+        ON a.id_negocio = n.id_negocio
+    WHERE n.id_prospecto = @id_prospecto;
+
+    RETURN @total;
+END;
+GO
