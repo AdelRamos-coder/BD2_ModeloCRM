@@ -110,8 +110,7 @@ CREATE TABLE TRABAJADOR (
 
     CONSTRAINT PK_TRABAJADOR        PRIMARY KEY (id_trabajador),
     CONSTRAINT UQ_TRABAJADOR_login  UNIQUE (login),
-    CONSTRAINT FK_TRABAJADOR_perfil FOREIGN KEY (id_perfil)
-        REFERENCES PERFIL (id_perfil)
+    CONSTRAINT FK_TRABAJADOR_perfil FOREIGN KEY (id_perfil) REFERENCES PERFIL (id_perfil)
 );
 GO
 
@@ -158,22 +157,19 @@ CREATE TABLE NEGOCIO (
 
     CONSTRAINT PK_NEGOCIO               PRIMARY KEY (id_negocio),
 
-    CONSTRAINT FK_NEGOCIO_prospecto     FOREIGN KEY (id_prospecto)
-        REFERENCES PROSPECTO (id_prospecto),
-    CONSTRAINT FK_NEGOCIO_trabajador    FOREIGN KEY (id_trabajador)
-        REFERENCES TRABAJADOR (id_trabajador),
-    CONSTRAINT FK_NEGOCIO_fase          FOREIGN KEY (id_fase)
-        REFERENCES FASE (id_fase),
-    CONSTRAINT FK_NEGOCIO_medio         FOREIGN KEY (id_medio)
-        REFERENCES MEDIO_CONTACTO (id_medio),
-    CONSTRAINT FK_NEGOCIO_producto      FOREIGN KEY (id_producto)
-        REFERENCES PRODUCTO_SERVICIO (id_producto),
+    CONSTRAINT FK_NEGOCIO_prospecto     FOREIGN KEY (id_prospecto) REFERENCES PROSPECTO (id_prospecto),
+   
+    CONSTRAINT FK_NEGOCIO_trabajador    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR (id_trabajador),
+   
+    CONSTRAINT FK_NEGOCIO_fase          FOREIGN KEY (id_fase) REFERENCES FASE (id_fase),
+   
+    CONSTRAINT FK_NEGOCIO_medio         FOREIGN KEY (id_medio) REFERENCES MEDIO_CONTACTO (id_medio),
+   
+    CONSTRAINT FK_NEGOCIO_producto      FOREIGN KEY (id_producto) REFERENCES PRODUCTO_SERVICIO (id_producto),
 
     CONSTRAINT CK_NEGOCIO_nivel         CHECK (nivel_interes BETWEEN 1 AND 5),
 
-    CONSTRAINT CK_NEGOCIO_inactivo      CHECK (
-        (activo = 1 AND fecha_inactivacion IS NULL) OR
-        (activo = 0 AND fecha_inactivacion IS NOT NULL)
+    CONSTRAINT CK_NEGOCIO_inactivo      CHECK ((activo = 1 AND fecha_inactivacion IS NULL) OR (activo = 0 AND fecha_inactivacion IS NOT NULL)
     )
 );
 GO
@@ -201,16 +197,13 @@ CREATE TABLE ACTIVIDAD (
 
     CONSTRAINT PK_ACTIVIDAD             PRIMARY KEY (id_actividad),
 
-    CONSTRAINT FK_ACTIVIDAD_negocio     FOREIGN KEY (id_negocio)
-        REFERENCES NEGOCIO (id_negocio),
-    CONSTRAINT FK_ACTIVIDAD_tipo        FOREIGN KEY (id_tipo)
-        REFERENCES TIPO_ACTIVIDAD (id_tipo),
-    CONSTRAINT FK_ACTIVIDAD_trabajador  FOREIGN KEY (id_trabajador)
-        REFERENCES TRABAJADOR (id_trabajador),
+    CONSTRAINT FK_ACTIVIDAD_negocio     FOREIGN KEY (id_negocio) REFERENCES NEGOCIO (id_negocio),
+   
+    CONSTRAINT FK_ACTIVIDAD_tipo        FOREIGN KEY (id_tipo) REFERENCES TIPO_ACTIVIDAD (id_tipo),
+   
+    CONSTRAINT FK_ACTIVIDAD_trabajador  FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR (id_trabajador),
 
-    CONSTRAINT CK_ACTIVIDAD_completada  CHECK (
-        (completada = 0 AND fecha_completada IS NULL) OR
-        (completada = 1 AND fecha_completada IS NOT NULL)
+    CONSTRAINT CK_ACTIVIDAD_completada  CHECK ((completada = 0 AND fecha_completada IS NULL) OR (completada = 1 AND fecha_completada IS NOT NULL)
     )
 );
 GO
@@ -234,17 +227,14 @@ CREATE TABLE PROPUESTA (
     observacion         NVARCHAR(500)   NULL,
 
     CONSTRAINT PK_PROPUESTA             PRIMARY KEY (id_propuesta),
-
-    CONSTRAINT FK_PROPUESTA_negocio     FOREIGN KEY (id_negocio)
-        REFERENCES NEGOCIO (id_negocio),
-    CONSTRAINT FK_PROPUESTA_trabajador  FOREIGN KEY (id_trabajador)
-        REFERENCES TRABAJADOR (id_trabajador),
-
-    CONSTRAINT CK_PROPUESTA_monto       CHECK (monto >= 0),
-    CONSTRAINT CK_PROPUESTA_estado      CHECK (estado IN
-        ('Activa','Aceptada','Rechazada','Vencida')),
-    CONSTRAINT CK_PROPUESTA_vence       CHECK (
-        fecha_vencimiento IS NULL OR fecha_vencimiento >= fecha_propuesta)
+   
+    CONSTRAINT FK_PROPUESTA_negocio     FOREIGN KEY (id_negocio) REFERENCES NEGOCIO (id_negocio),
+   
+    CONSTRAINT FK_PROPUESTA_trabajador  FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR (id_trabajador),
+   
+    CONSTRAINT CK_PROPUESTA_estado      CHECK (estado IN ('Activa','Aceptada','Rechazada','Vencida')),
+   
+    CONSTRAINT CK_PROPUESTA_vence       CHECK (fecha_vencimiento IS NULL OR fecha_vencimiento >= fecha_propuesta)
 );
 GO
 
