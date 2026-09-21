@@ -87,6 +87,8 @@ CREATE PROCEDURE usp_RegistrarProspecto
 AS
 BEGIN
 
+    SET XACT_ABORT ON;
+
     DECLARE @id_prospecto INT;
     DECLARE @id_fase      INT;
 
@@ -96,33 +98,21 @@ BEGIN
         RETURN;
     END
 
-    BEGIN TRY
+    BEGIN TRANSACTION;
 
-        BEGIN TRANSACTION;
+    INSERT INTO PROSPECTO (nombre_prospecto, celular, correo)
+    VALUES (@nombre, @celular, @correo);
 
-        INSERT INTO PROSPECTO (nombre_prospecto, celular, correo)
-        VALUES (@nombre, @celular, @correo);
+    SET @id_prospecto = SCOPE_IDENTITY();
 
-        SET @id_prospecto = SCOPE_IDENTITY();
+    SELECT @id_fase = fas.id_fase
+    FROM FASE fas
+    WHERE fas.orden = 1;
 
-        SELECT @id_fase = fas.id_fase
-        FROM FASE fas
-        WHERE fas.orden = 1;
+    INSERT INTO NEGOCIO (id_prospecto, id_trabajador, id_fase, id_medio, id_producto, nivel_interes)
+    VALUES (@id_prospecto, @id_trabajador, @id_fase, @id_medio, @id_producto, @nivel_interes);
 
-        INSERT INTO NEGOCIO (id_prospecto, id_trabajador, id_fase, id_medio, id_producto, nivel_interes)
-        VALUES (@id_prospecto, @id_trabajador, @id_fase, @id_medio, @id_producto, @nivel_interes);
-
-        COMMIT TRANSACTION;
-
-    END TRY
-    BEGIN CATCH
-
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-
-        THROW;
-
-    END CATCH
+    COMMIT TRANSACTION;
 
 END;
 GO
