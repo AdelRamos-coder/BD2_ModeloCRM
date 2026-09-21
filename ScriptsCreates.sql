@@ -232,8 +232,6 @@ CREATE TABLE PROPUESTA (
     CONSTRAINT FK_PROPUESTA_negocio FOREIGN KEY (id_negocio) REFERENCES NEGOCIO (id_negocio),
    
     CONSTRAINT FK_PROPUESTA_trabajador FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR (id_trabajador),
-
-    CONSTRAINT CK_PROPUESTA_monto CHECK (monto >= 0),
    
     CONSTRAINT CK_PROPUESTA_estado CHECK (estado IN ('Activa','Aceptada','Rechazada','Vencida')),
    
