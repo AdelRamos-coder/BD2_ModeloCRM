@@ -1,12 +1,3 @@
-/* ============================================================
-   CRM ODERLOGICA
-   CREATE TABLE - 12 tablas
-   Motor: SQL Server
-
-   Nomenclatura:
-     PROSPECTO = la persona (cliente potencial)
-     NEGOCIO   = la negociacion de esa persona por un producto
-   ============================================================ */
 
 IF DB_ID('CRM_Oderlogica') IS NOT NULL
 BEGIN
@@ -22,10 +13,7 @@ USE CRM_Oderlogica;
 GO
 
 
-/* ------------------------------------------------------------
-   CATALOGOS
-   Van primero: una FK no puede apuntar a una tabla inexistente.
-   ------------------------------------------------------------ */
+
 
 CREATE TABLE PERFIL (
     id_perfil INT IDENTITY(1,1),
@@ -37,9 +25,6 @@ CREATE TABLE PERFIL (
 GO
 
 
-/* orden    : posicion en el embudo. El id_fase no sirve para
-              ordenar porque el IDENTITY numera por insercion.
-   es_final : la negociacion termino (CERRADO / DESISTIDO).     */
 CREATE TABLE FASE (
     id_fase INT IDENTITY(1,1),
     nombre_fase VARCHAR(40) NOT NULL,
@@ -75,10 +60,6 @@ CREATE TABLE PRODUCTO_SERVICIO (
 GO
 
 
-/* automatica : separa lo que registra el sistema (Prospecto
-                creado, Cambio de fase) de lo que escribe el
-                asesor. El trigger que limita 5 actividades por
-                dia solo debe contar las manuales.              */
 CREATE TABLE TIPO_ACTIVIDAD (
     id_tipo INT IDENTITY(1,1),
     nombre_actividad VARCHAR(40) NOT NULL,
@@ -90,13 +71,7 @@ CREATE TABLE TIPO_ACTIVIDAD (
 GO
 
 
-/* ------------------------------------------------------------
-   ENTIDADES PRINCIPALES
-   ------------------------------------------------------------ */
-
-/* clave_hash : salida de HASHBYTES('SHA2_256'). Nunca texto plano.
-   activo     : un trabajador no se borra, se desactiva: miles de
-                negocios lo referencian.                         */
+                         */
 CREATE TABLE TRABAJADOR (
     id_trabajador INT IDENTITY(1,1),
     nombre_trabajador VARCHAR(100) NOT NULL,
@@ -115,9 +90,7 @@ CREATE TABLE TRABAJADOR (
 GO
 
 
-/* La PERSONA. Existe una sola vez aunque negocie varias veces.
-   Separarla de NEGOCIO elimina la dependencia transitiva
-   id_negocio -> celular -> nombre del modelo original.          */
+
 CREATE TABLE PROSPECTO (
     id_prospecto INT IDENTITY(1,1),
     nombre_prospecto VARCHAR(150) NOT NULL,
@@ -133,16 +106,7 @@ CREATE TABLE PROSPECTO (
 GO
 
 
-/* La NEGOCIACION. Un prospecto puede tener varias, con distinto
-   producto, asesor y fase.
 
-   nivel_interes      : las 5 estrellas. Escala ordinal que se
-                        promedia, por eso es numero y no catalogo.
-   ultima_actividad   : derivado guardado a proposito para no
-                        recalcular MAX(fecha) en cada carga del
-                        Kanban. Lo mantiene un trigger.
-   activo /
-   fecha_inactivacion : borrado logico.                          */
 CREATE TABLE NEGOCIO (
     id_negocio INT IDENTITY(1,1),
     id_prospecto INT NOT NULL,
@@ -177,13 +141,6 @@ CREATE TABLE NEGOCIO (
 GO
 
 
-/* Anotaciones, citas y tareas en una sola tabla: comparten casi
-   todos los campos y el historico las muestra mezcladas.
-
-   fecha_registro   : cuando se escribio      (pasado)
-   fecha_programada : cuando ocurre la cita   (futuro)
-   id_trabajador    : quien REGISTRO la actividad, que puede no
-                      ser el dueno del negocio.                  */
 CREATE TABLE ACTIVIDAD (
     id_actividad INT IDENTITY(1,1),
     id_negocio INT NOT NULL,
@@ -211,13 +168,7 @@ CREATE TABLE ACTIVIDAD (
 GO
 
 
-/* Cotizacion formal. Un negocio puede tener varias (inicial,
-   mejorada, final), por eso 1:N y no una columna en NEGOCIO.
 
-   monto  : DECIMAL, nunca FLOAT. FLOAT es aproximado y con dinero
-            produce valores como 179999999.9999998.
-   estado : cuatro valores fijos del proceso. CHECK y no catalogo
-            porque no es una lista que el administrador edite.    */
 CREATE TABLE PROPUESTA (
     id_propuesta INT IDENTITY(1,1),
     id_negocio INT NOT NULL,
@@ -241,14 +192,6 @@ CREATE TABLE PROPUESTA (
 GO
 
 
-/* ------------------------------------------------------------
-   TABLAS TECNICAS
-
-   Sin claves foraneas, a proposito. Si AUDITORIA tuviera FK
-   hacia NEGOCIO, al borrar el negocio 88 el motor exigiria
-   borrar tambien su rastro, que es justo lo que la auditoria
-   existe para impedir. Guardan el identificador suelto.
-   ------------------------------------------------------------ */
 
 CREATE TABLE AUDITORIA (
     id_auditoria BIGINT IDENTITY(1,1),
