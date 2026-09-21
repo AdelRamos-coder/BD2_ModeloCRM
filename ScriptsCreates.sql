@@ -277,9 +277,3 @@ CREATE TABLE LOG_ACTIVIDAD (
 );
 GO
 
-
-
-      WHERE f.parent_object_id = t.object_id) AS fks
-FROM sys.tables t
-ORDER BY t.name;
-GO
